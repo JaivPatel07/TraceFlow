@@ -21,6 +21,17 @@ Go back to the default overview mode.
 
 ---
 
+## Advanced Manual Control
+
+If you don't want to use decorators, you can toggle the tracer manually. Use this with caution: if you don't call `stop()`, the tracer will continue running and slow down your process.
+
+- `start()`: Activates the tracer globally for the current thread.
+- `stop()`: Deactivates the tracer.
+- `configure(**kwargs)`: Change settings (lines, locals, args) on the fly.
+- `reset()`: Clear the indentation depth.
+
+---
+
 ## Example
 
 ```python

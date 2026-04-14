@@ -1,29 +1,49 @@
 # TraceFlow
 
-TraceFlow is a lightweight, zero-dependency Python tracing utility designed to provide deep visibility into code execution. It transforms standard debugging into a high-fidelity visual experience, tracking function calls, variable mutations, and exceptions in real-time.
+TraceFlow is a lightweight Python tracing tool that helps you understand code flow while functions run.
 
-## Key Features
+It can show:
+- which function is called
+- input argument values
+- return values
+- optional line-by-line execution
+- optional local state per line
+- exceptions
+- total execution time
 
-- **Visual Call Stacks**: Recursive indentation showing nested function entries and exits.
-- **Live Local State**: Optional line-by-line inspection of variable values.
-- **Dynamic Control**: Fine-grained detail toggling (zoom-in/out) via `trace_state_start` and `trace_state_stop`.
-- **Exception Tracking**: Immediate visualization of the failure point (`✖`) with error details.
-- **Intelligent Truncation**: Automatic formatting of large data structures to maintain readability.
-- **Zero Dependencies**: Pure Python 3.8+ using standard library modules.
+## What Is Included
 
-## Project Structure
+Project files:
 
 ```text
 TraceFlow/
-├── main.py              # Example usage & demonstration
-└── TRACEFLOW/           # Core library
-    ├── api.py           # Public decorator & control functions
-    └── tracer.py        # Core tracing engine logic
+	main.py
+	traceflow/
+		api.py
+		tracer.py
 ```
+
+### File Responsibilities
+
+- `traceflow/api.py`:
+	- Public API for users.
+	- Provides `trace` decorator.
+	- Provides state-detail flags: `trace_state_start` and `trace_state_stop`.
+- `traceflow/tracer.py`:
+	- Core trace logic (`TraceEngine`).
+	- Handles call, line, return, and exception events.
+	- Formats output to keep it readable.
+- `main.py`:
+	- Example usage (backtracking combinations demo).
+
+## Requirements
+
+- Python 3.8+
+- No external dependencies
 
 ## Quick Start
 
-Ensure you are in the project root and run the demo:
+Run from project root:
 
 ```bash
 python main.py
@@ -79,6 +99,18 @@ Use this when you want extra detail only for one code block, usually around loop
 ### 3. `trace_state_stop()`
 
 Turns off detailed line tracing and goes back to compact output.
+
+### 4. Manual Control (Advanced)
+
+For non-decorator usage (like in a REPL):
+
+```python
+from traceflow.api import start, stop
+
+start()
+# ... your code ...
+stop()
+```
 
 ## Recommended Usage Pattern
 
