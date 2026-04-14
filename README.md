@@ -1,49 +1,29 @@
 # TraceFlow
 
-TraceFlow is a lightweight Python tracing tool that helps you understand code flow while functions run.
+TraceFlow is a lightweight, zero-dependency Python tracing utility designed to provide deep visibility into code execution. It transforms standard debugging into a high-fidelity visual experience, tracking function calls, variable mutations, and exceptions in real-time.
 
-It can show:
-- which function is called
-- input argument values
-- return values
-- optional line-by-line execution
-- optional local state per line
-- exceptions
-- total execution time
+## Key Features
 
-## What Is Included
+- **Visual Call Stacks**: Recursive indentation showing nested function entries and exits.
+- **Live Local State**: Optional line-by-line inspection of variable values.
+- **Dynamic Control**: Fine-grained detail toggling (zoom-in/out) via `trace_state_start` and `trace_state_stop`.
+- **Exception Tracking**: Immediate visualization of the failure point (`✖`) with error details.
+- **Intelligent Truncation**: Automatic formatting of large data structures to maintain readability.
+- **Zero Dependencies**: Pure Python 3.8+ using standard library modules.
 
-Project files:
+## Project Structure
 
 ```text
 TraceFlow/
-	main.py
-	traceflow/
-		api.py
-		tracer.py
+├── main.py              # Example usage & demonstration
+└── TRACEFLOW/           # Core library
+    ├── api.py           # Public decorator & control functions
+    └── tracer.py        # Core tracing engine logic
 ```
-
-### File Responsibilities
-
-- `traceflow/api.py`:
-	- Public API for users.
-	- Provides `trace` decorator.
-	- Provides state-detail flags: `trace_state_start` and `trace_state_stop`.
-- `traceflow/tracer.py`:
-	- Core trace logic (`TraceEngine`).
-	- Handles call, line, return, and exception events.
-	- Formats output to keep it readable.
-- `main.py`:
-	- Example usage (backtracking combinations demo).
-
-## Requirements
-
-- Python 3.8+
-- No external dependencies
 
 ## Quick Start
 
-Run from project root:
+Ensure you are in the project root and run the demo:
 
 ```bash
 python main.py

@@ -1,52 +1,27 @@
-# TraceFlow Technical Documentation
+# TraceFlow Docs
 
 TraceFlow is a lightweight, zero-dependency Python tracing library designed to provide high-visibility debugging. It leverages `sys.settrace` to monitor function calls, variable mutations, and exceptions in real-time.
 
 ---
 
-## 1. Public API Reference (`api.py`)
-
-These are the primary tools used by developers to instrument their code.
+## API Reference (`api.py`)
 
 ### `@trace` (Decorator)
-The main entry point for tracing. It wraps a function to initialize the trace engine, capture execution data, and print a summary.
+The main tool. Stick it on any function you want to watch.
 
-*   **Parameters**:
-    *   `show_lines` (bool): Enables printing of every line executed within the function.
-    *   `show_locals` (bool): If line tracing is on, this prints the state of local variables on each line.
-    *   `show_args` (bool): Prints the values of arguments passed into the function upon entry.
+- `show_lines`: Logs every line as it runs.
+- `show_locals`: Dumps local variables on every line (use with `show_lines`).
+- `show_args`: Logs inputs when function is called.
 
 ### `trace_state_start(show_locals=True)`
-Dynamically increases the verbosity of a running trace. Use this inside a function to "zoom in" on a specific block of code (like a complex loop) without flooding the output for the entire function.
+Turn on detailed line tracing mid-function. Great for isolating loops without flooding the logs for the whole app.
 
 ### `trace_state_stop()`
-Resets the trace verbosity to the levels defined in the `@trace` decorator. Use this to "zoom out" after a sensitive block of code has finished.
+Go back to the default overview mode.
 
 ---
 
-## 2. Internal Engine Reference (`tracer.py`)
-
-The `TraceEngine` class manages the state and formatting of the trace session.
-
-### Core Methods
-
-| Method | Description |
-| :--- | :--- |
-| `tracer(frame, event, arg)` | The primary callback for `sys.settrace`. It dispatches events to specific handlers. |
-| `configure(...)` | Updates engine flags (lines, locals, args) at runtime. |
-| `reset()` | Clears the `call_depth` to ensure indentation starts fresh. |
-| `_print_call(frame)` | Formats the function entry. Increments indentation. Uses `▶`. |
-| `_print_line(frame)` | Formats line execution. Retrieves line numbers and local variables. Uses `│`. |
-| `_print_return(frame, res)`| Formats function exit. Decrements indentation and shows return value. Uses `◀`. |
-| `_print_exception(frame, arg)`| Formats unhandled exceptions. Captures type and message. Uses `✖`. |
-| `_short(value)` | Uses `reprlib` to truncate long strings, lists, or dicts to keep output readable. |
-| `_should_trace_frame(frame)`| Security filter. Prevents TraceFlow from tracing its own internal logic or synthetic Python frames. |
-
----
-
-## 3. Comprehensive Usage Example
-
-This example utilizes every method in the API to demonstrate a full lifecycle, including recursion, dynamic state switching, and exception handling.
+## Example
 
 ```python
 from traceflow.api import trace, trace_state_start, trace_state_stop
@@ -77,34 +52,17 @@ if __name__ == "__main__":
 
 ---
 
-## 4. Full Output Explained
+## Output Breakdown
 
-Based on the example above, here is what the console output looks like and what each part signifies.
-
-### Function Execution Output
 ```text
 === TraceFlow: calculate_factorial ===
 ▶ calculate_factorial(n=3)
   │ line 5: if n <= 1:
-  │ line 9: trace_state_start(show_locals=True)
-  │ line 10: result = n * calculate_factorial(n - 1)
     ▶ calculate_factorial(n=2)
-      │ line 5: if n <= 1:
-      │ line 9: trace_state_start(show_locals=True)
-      │ line 10: result = n * calculate_factorial(n - 1)
         ▶ calculate_factorial(n=1)
         ◀ calculate_factorial() -> 1
-      │ line 10: result = n * calculate_factorial(n - 1) | n=2, result=2
-      │ line 11: trace_state_stop()
-      │ line 13: return result
     ◀ calculate_factorial() -> 2
-  │ line 10: result = n * calculate_factorial(n - 1) | n=3, result=6
-  │ line 11: trace_state_stop()
-  │ line 13: return result
 ◀ calculate_factorial() -> 6
-result: 6
-time: 0.000452s
-=== End TraceFlow ===
 ```
 
 **Key Takeaways from Output:**
