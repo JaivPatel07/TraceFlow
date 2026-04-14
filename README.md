@@ -20,7 +20,6 @@ TraceFlow/
 	main.py
 	traceflow/
 		api.py
-		engine.py
 		tracer.py
 ```
 
@@ -30,9 +29,6 @@ TraceFlow/
 	- Public API for users.
 	- Provides `trace` decorator.
 	- Provides state-detail flags: `trace_state_start` and `trace_state_stop`.
-- `traceflow/engine.py`:
-	- Small bridge around `sys.settrace`.
-	- Starts/stops tracing and forwards settings to tracer engine.
 - `traceflow/tracer.py`:
 	- Core trace logic (`TraceEngine`).
 	- Handles call, line, return, and exception events.

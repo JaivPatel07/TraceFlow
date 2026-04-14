@@ -98,14 +98,15 @@ class TraceEngine:
             frame: The frame being entered.
         """
         indent = "  " * self.call_depth
-        func_name = frame.f_code.co_name
         args_text = "()"
-        if self.include_args:
-            args_info = self._get_args(frame)
-            if args_info:
-                args_text = f"({self._format_mapping(args_info)})"
 
-        print(f"{indent}▶ {func_name}{args_text}")
+        if self.include_args:
+            arg_names, _, _, _ = inspect.getargvalues(frame)
+            if arg_names:
+                items = [f"{a}={self._short(frame.f_locals[a])}" for a in arg_names]
+                args_text = f"({', '.join(items)})"
+
+        print(f"{indent}▶ {frame.f_code.co_name}{args_text}")
 
         self.call_depth += 1
 
@@ -117,16 +118,13 @@ class TraceEngine:
             frame: The current execution frame.
         """
         indent = "  " * self.call_depth
-        lineno = frame.f_lineno
-        msg = f"{indent}│ line {lineno}"
+        msg = f"{indent}│ line {frame.f_lineno}"
 
         if self.show_locals_on_line:
-            locals_clean = {
-                k: v for k, v in frame.f_locals.items() 
-                if not k.startswith("__") and not callable(v)
-            }
-            if locals_clean:
-                msg += f" | {self._format_mapping(locals_clean)}"
+            items = [f"{k}={self._short(v)}" for k, v in frame.f_locals.items() 
+                     if not k.startswith("__") and not callable(v)]
+            if items:
+                msg += f" | {', '.join(items)}"
         
         print(msg)
 
@@ -140,8 +138,7 @@ class TraceEngine:
         """
         indent = "  " * max(0, self.call_depth - 1)
         exc_type, exc_value, _ = arg
-        func_name = frame.f_code.co_name
-        print(f"{indent}✖ {func_name}() ! {exc_type.__name__}: {exc_value}")
+        print(f"{indent}✖ {frame.f_code.co_name}() [line {frame.f_lineno}] ! {exc_type.__name__}: {exc_value}")
 
     def _print_return(self, frame, result):
         """
@@ -152,34 +149,7 @@ class TraceEngine:
             result: The value being returned.
         """
         self.call_depth = max(0, self.call_depth - 1)
-        indent = "  " * self.call_depth
-        func_name = frame.f_code.co_name
-        print(f"{indent}◀ {func_name}() -> {self._short(result)}")
-
-    def _get_args(self, frame):
-        """
-        Extracts argument names and values from a frame.
-
-        Args:
-            frame: The stack frame to inspect.
-
-        Returns:
-            dict: A mapping of argument names to their values.
-        """
-        args, _, _, values = inspect.getargvalues(frame)
-        return {a: values[a] for a in args}
-
-    def _format_mapping(self, mapping):
-        """
-        Formats a dictionary of variables into a readable string.
-
-        Args:
-            mapping (dict): The variables to format.
-
-        Returns:
-            str: A comma-separated string of key=value pairs.
-        """
-        return ", ".join(f"{key}={self._short(value)}" for key, value in mapping.items())
+        print(f"{'  ' * self.call_depth}◀ {frame.f_code.co_name}() -> {self._short(result)}")
 
     def _short(self, value):
         """
