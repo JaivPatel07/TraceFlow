@@ -1,66 +1,26 @@
-import time
-import inspect
-from functools import wraps
+"""
+Example demonstration of TraceFlow using a backtracking algorithm.
+"""
+from traceflow.api import trace
 
-# Global variable to track recursion depth
-call_depth = 0
+@trace(show_lines=False)
+def generate_combinations(values):
+    """Builds all possible subsets of the given values."""
+    result = []
+    path = []
 
+    def backtrack(start_index):
+        result.append(path[:])
 
-def funFlow(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        global call_depth
+        for index in range(start_index, len(values)):
+            path.append(values[index])
+            backtrack(index + 1)
+            path.pop()
 
-        indent = "  " * call_depth
-        func_name = func.__name__
-
-        sig = inspect.signature(func)
-        bound = sig.bind(*args, **kwargs)
-        bound.apply_defaults()
-
-        print(f"{indent}Function: {func_name}")
-        print(f"{indent}Arguments: {dict(bound.arguments)}")
-
-        start_time = time.perf_counter()
-        call_depth += 1
-
-        try:
-            result = func(*args, **kwargs)
-        except Exception as e:
-            call_depth -= 1
-            print(f"{indent}Error: {e}")
-            raise
-
-        call_depth -= 1
-        end_time = time.perf_counter()
-
-        print(f"{indent}Result: {result}")
-        print(f"{indent}Execution Time: {end_time - start_time:.6f}s\n")
-
-        return result
-
-    return wrapper
-
-
-# ---------------- TEST CODE ---------------- #
+    backtrack(0)
+    return result
 
 if __name__ == "__main__":
-
-    @funFlow
-    def add(a, b):
-        return a + b
-
-    @funFlow
-    def factorial(n):
-        if n < 0:
-            raise ValueError("Negative not allowed")
-        if n == 0 or n == 1:
-            return 1
-        return n * factorial(n - 1)
-
-    print("---- ADD ----")
-    add(3, 5)
-
-    print("\n---- FACTORIAL ----")
-    result = factorial(5)
-    print(f"\nFinal Result: {result}")
+    numbers = [1, 2, 3]
+    combinations = generate_combinations(numbers)
+    print("combinations:", combinations)
