@@ -11,8 +11,6 @@ def generate_combinations(values):
 
     def backtrack(start_index):
         result.append(path[:])
-
-        # Use trace_state_start to increase detail ONLY for the loop
         trace_state_start(show_locals=True)
         for index in range(start_index, len(values)):
             path.append(values[index])
@@ -33,11 +31,7 @@ def demonstrate_exception(should_fail=True):
 
 if __name__ == "__main__":
     numbers = [1, 2, 3]
-    
-    # 1. Trace a complex algorithm with dynamic detail switching
     combinations = generate_combinations(numbers)
-    
-    # 2. Trace an exception
     try:
         demonstrate_exception()
     except ZeroDivisionError:

@@ -100,18 +100,6 @@ Use this when you want extra detail only for one code block, usually around loop
 
 Turns off detailed line tracing and goes back to compact output.
 
-### 4. Manual Control (Advanced)
-
-For non-decorator usage (like in a REPL):
-
-```python
-from traceflow.api import start, stop
-
-start()
-# ... your code ...
-stop()
-```
-
 ## Recommended Usage Pattern
 
 Default mode should stay compact. Enable detail only around code you are debugging.
@@ -141,6 +129,10 @@ TraceFlow uses symbols to make output easy to scan:
 - `◀` function return
 - `│ line N` line execution (when enabled)
 - `✖` exception event
+
+
+![alt text](1.png)
+![alt text](2.png)
 
 Wrapper summary:
 
