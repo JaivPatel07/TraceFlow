@@ -1,35 +1,36 @@
 """
-Core engine logic. Handles the sys.settrace hooks and output formatting.
+Core tracing engine using sys.settrace.
+Handles function calls, lines, returns, and exceptions.
 """
+
 import inspect
 import os
 import reprlib
 import sys
-from typing import Any
 
 
 class TraceEngine:
     def __init__(self):
         self.depth = 0
-        self.lines = False
-        self.locals = False
-        self.args = True
+        self.show_lines = False
+        self.show_locals = False
+        self.show_args = True
 
-        # Grab the package dir so we don't trace ourselves
-        self._pkg_dir = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
+        # Avoid tracing internal library code
+        self._pkg_dir = os.path.dirname(os.path.abspath(__file__))
 
-        # Sensible defaults for truncating large data
+        # Shorten large outputs
         self._repr = reprlib.Repr()
         self._repr.maxstring = 60
         self._repr.maxlist = self._repr.maxtuple = self._repr.maxdict = 6
 
-    def configure(self, show_line_events=None, show_locals_on_line=None, include_args=None):
-        if show_line_events is not None:
-            self.lines = bool(show_line_events)
-        if show_locals_on_line is not None:
-            self.locals = bool(show_locals_on_line)
-        if include_args is not None:
-            self.args = bool(include_args)
+    def configure(self, show_lines=None, show_locals=None, show_args=None):
+        if show_lines is not None:
+            self.show_lines = show_lines
+        if show_locals is not None:
+            self.show_locals = show_locals
+        if show_args is not None:
+            self.show_args = show_args
 
     def reset(self):
         self.depth = 0
@@ -39,25 +40,28 @@ class TraceEngine:
             if not self._is_user_code(frame):
                 return None
             self._print_call(frame)
-        elif event == "line":
-            if self.lines:
-                self._print_line(frame)
-        elif event == "exception":
-            self._print_exception(frame, arg)
+
+        elif event == "line" and self.show_lines:
+            self._print_line(frame)
+
         elif event == "return":
             self._print_return(frame, arg)
+
+        elif event == "exception":
+            self._print_exception(frame, arg)
+
         return self.tracer
 
     def _print_call(self, frame):
         indent = "  " * self.depth
-        args_text = "()"
 
-        if self.args:
-            # inspect.getargvalues is a bit legacy but works fine here
+        args_text = "()"
+        if self.show_args:
             names, _, _, _ = inspect.getargvalues(frame)
             if names:
-                items = [f"{n}={self._fmt(frame.f_locals[n])}" for n in names]
-                args_text = f"({', '.join(items)})"
+                args_text = "(" + ", ".join(
+                    f"{n}={self._fmt(frame.f_locals[n])}" for n in names
+                ) + ")"
 
         print(f"{indent}▶ {frame.f_code.co_name}{args_text}")
         self.depth += 1
@@ -66,40 +70,57 @@ class TraceEngine:
         indent = "  " * self.depth
         msg = f"{indent}│ line {frame.f_lineno}"
 
-        if self.locals:
-            # filter out noisy internals and functions
-            items = [f"{k}={self._fmt(v)}" for k, v in frame.f_locals.items() 
-                     if not (k.startswith("__") or callable(v))]
+        if self.show_locals:
+            items = [
+                f"{k}={self._fmt(v)}"
+                for k, v in frame.f_locals.items()
+                if not k.startswith("__") and not callable(v)
+            ]
             if items:
-                msg += f" | {', '.join(items)}"
+                msg += " | " + ", ".join(items)
+
         print(msg)
+
+    def _print_return(self, frame, result):
+        self.depth = max(0, self.depth - 1)
+        indent = "  " * self.depth
+        print(f"{indent}◀ {frame.f_code.co_name}() -> {self._fmt(result)}")
 
     def _print_exception(self, frame, arg):
         indent = "  " * max(0, self.depth - 1)
         etype, evalue, _ = arg
-        print(f"{indent}✖ {frame.f_code.co_name}() [line {frame.f_lineno}] ! {etype.__name__}: {evalue}")
+        print(f"{indent}✖ {frame.f_code.co_name}() ! {etype.__name__}: {evalue}")
 
-    def _print_return(self, frame, result):
-        self.depth = max(0, self.depth - 1)
-        print(f"{'  ' * self.depth}◀ {frame.f_code.co_name}() -> {self._fmt(result)}")
-
-    def _fmt(self, val):
+    def _fmt(self, value):
         try:
-            return self._repr.repr(val)
+            return self._repr.repr(value)
         except Exception:
-            return f"<{type(val).__name__}>"
+            return f"<{type(value).__name__}>"
 
     def _is_user_code(self, frame):
-        path = os.path.abspath(frame.f_code.co_filename).replace("\\", "/")
-        # Ignore synthetic stuff like <listcomp>
+        filename = os.path.abspath(frame.f_code.co_filename)
+
+        # Skip internal + synthetic frames
         if frame.f_code.co_name.startswith("<"):
             return False
-        return not path.startswith(self._pkg_dir)
+
+        return not filename.startswith(self._pkg_dir)
 
 
 _engine = TraceEngine()
 
-def start(): sys.settrace(_engine.tracer)
-def stop(): sys.settrace(None)
-def reset(): _engine.reset()
-def configure(**kw): _engine.configure(**kw)
+
+def start():
+    sys.settrace(_engine.tracer)
+
+
+def stop():
+    sys.settrace(None)
+
+
+def reset():
+    _engine.reset()
+
+
+def configure(**kwargs):
+    _engine.configure(**kwargs)

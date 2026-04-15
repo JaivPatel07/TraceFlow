@@ -1,6 +1,6 @@
-# TraceFlow Documentation (Simple)
+# TraceFlow Documentation
 
-TraceFlow is a lightweight Python tool that helps you **see what your code is doing step-by-step**.
+TraceFlow is a lightweight Python tool that helps you **see how your code runs step-by-step**.
 It shows function calls, variable values, and errors in real time.
 
 ---
@@ -9,13 +9,13 @@ It shows function calls, variable values, and errors in real time.
 
 Use `@trace` on any function you want to debug.
 
-### Options:
+### Options
 
-* `show_lines=True` → shows each line being executed
-* `show_locals=True` → shows variable values on each line
-* `show_args=True` → shows function input values
+* `show_lines=True` → show each executed line
+* `show_locals=True` → show variable values on each line
+* `show_args=True` → show function input values
 
-### Example:
+### Example
 
 ```python
 @trace(show_lines=True, show_locals=True)
@@ -26,35 +26,35 @@ def test():
 
 ---
 
-## 2. Control Tracing Inside Function
+## 2. Control Tracing Inside a Function
 
-Sometimes you don’t want logs for the whole function, only for a specific part (like a loop).
+Sometimes you only need detailed logs for a specific part (like a loop).
 
-### Functions:
+### Functions
 
 * `trace_state_start(show_locals=True)` → start detailed tracing
 * `trace_state_stop()` → stop detailed tracing
 
-👉 Use this when you want to debug only a small section.
+Use this to keep output clean and focus only on important sections.
 
 ---
 
 ## 3. Manual Control (Advanced)
 
-If you don’t want to use decorators, you can control tracing manually.
+You can also control tracing without decorators.
 
-### Functions:
+### Functions
 
 * `start()` → start tracing
 * `stop()` → stop tracing
-* `configure(...)` → change settings anytime
+* `configure(...)` → update settings anytime
 * `reset()` → reset indentation level
 
-⚠️ Important: Always call `stop()` or tracing will continue running and slow your program.
+Important: Always call `stop()` to avoid performance issues.
 
 ---
 
-## 4. Full Example
+## 4. Example
 
 ```python
 from traceflow.api import trace, trace_state_start, trace_state_stop
@@ -64,7 +64,6 @@ def factorial(n):
     if n <= 1:
         return 1
 
-    # Enable detailed tracing only here
     trace_state_start(show_locals=True)
     result = n * factorial(n - 1)
     trace_state_stop()
@@ -90,9 +89,9 @@ if __name__ == "__main__":
 
 ## 5. Understanding Output
 
-### Example Output:
+### Example
 
-```text
+```
 ▶ factorial(n=3)
   ▶ factorial(n=2)
     ▶ factorial(n=1)
@@ -101,10 +100,10 @@ if __name__ == "__main__":
 ◀ factorial() -> 6
 ```
 
-### Meaning:
+### Meaning
 
-* `▶` → function started
-* `◀` → function returned value
+* `▶` → function call
+* `◀` → function return
 * indentation → shows nested calls
 * `(n=3)` → input arguments
 
@@ -112,39 +111,39 @@ if __name__ == "__main__":
 
 ## 6. Exception Output
 
-```text
+```
 ▶ risky()
 ✖ risky() ! ZeroDivisionError: division by zero
 ◀ risky() -> None
 ```
 
-### Meaning:
+### Meaning
 
 * `✖` → error occurred
 * shows error type and message
-* returns `None` because function crashed
+* returns `None` because execution stopped
 
 ---
 
 ## 7. Symbols
 
-| Symbol    | Meaning        |
-| --------- | -------------- |
-| ▶         | Function start |
-| ◀         | Function end   |
-| │ line N  | Running line   |
-| var=value | Variable value |
-| ✖         | Error          |
+| Symbol    | Meaning         |
+| --------- | --------------- |
+| ▶         | Function call   |
+| ◀         | Function return |
+| │ line N  | Executed line   |
+| var=value | Variable value  |
+| ✖         | Exception       |
 
 ---
 
-## 8. Smart Output (Auto Shortening)
+## 8. Smart Output
 
-To keep logs clean and readable:
+To keep logs readable:
 
-* Long strings → max 50 characters
-* Large lists/dictionaries → only first few items
-* Complex objects → show type name
+* Long strings are shortened
+* Large lists/dictionaries show only a few items
+* Complex objects are simplified
 
 ---
 
@@ -152,10 +151,10 @@ To keep logs clean and readable:
 
 TraceFlow helps you:
 
-* Understand how functions run
+* Understand code flow
 * Debug loops and recursion
 * Track variable changes
-* Find errors quickly
+* Detect errors quickly
 
 ---
 

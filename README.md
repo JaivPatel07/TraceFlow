@@ -2,7 +2,7 @@
 
 TraceFlow is a lightweight Python tracing tool that helps you understand how your code runs.
 
-It shows:
+It provides clear visibility into:
 
 * Function calls
 * Input arguments
@@ -22,12 +22,12 @@ It shows:
 
 ## Installation
 
-No installation needed.
+No installation required.
 
 * Python 3.8+
 * No external dependencies
 
-Just clone or download the project.
+Clone or download the repository and run directly.
 
 ---
 
@@ -82,7 +82,7 @@ def func():
 
 ## Focused Debugging
 
-TraceFlow lets you enable detailed tracing only where needed.
+Enable detailed tracing only where needed to avoid noisy output.
 
 ```python
 from traceflow.api import trace, trace_state_start, trace_state_stop
@@ -148,27 +148,27 @@ TraceFlow/
 
 ## How It Works
 
-* Uses Python’s built-in sys.settrace
-* Tracks function calls, lines, returns, and exceptions
-* Formats output to stay readable
+* Uses Python’s built-in `sys.settrace`
+* Tracks function calls, line execution, returns, and exceptions
+* Formats output to remain readable and concise
 
 ---
 
 ## Smart Output
 
-To keep logs clean:
+To keep logs readable:
 
 * Long strings are shortened
-* Large lists/dictionaries are truncated
+* Large lists and dictionaries are truncated
 * Complex objects are simplified
 
 ---
 
 ## Tips
 
-* Use default @trace for clean output
-* Enable detailed tracing only where needed
-* Avoid full line tracing everywhere
+* Use `@trace` for a clean overview
+* Enable detailed tracing only where necessary
+* Avoid full line tracing across large code blocks
 
 ---
 

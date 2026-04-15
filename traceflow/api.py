@@ -1,37 +1,50 @@
 """
-User-facing API. Provides the decorator and manual toggles.
+Public API for TraceFlow
 """
 import time
 from functools import wraps
-from .tracer import configure, reset, start, stop
+from .tracer import start, stop, reset, configure
 
-# Keep track of nested @trace calls so we don't start/stop multiple times
+
+# Prevent multiple nested trace sessions
 _active_depth = 0
 
+
 def trace_state_start(show_locals=True):
-    configure(show_line_events=True, show_locals_on_line=show_locals)
+    configure(show_lines=True, show_locals=show_locals)
+
 
 def trace_state_stop():
-    configure(show_line_events=False, show_locals_on_line=False)
+    configure(show_lines=False, show_locals=False)
+
 
 def trace(func=None, *, show_lines=False, show_locals=False, show_args=True):
+    """
+    Decorator to trace function execution.
+    Supports both:
+        @trace
+        @trace(...)
+    """
+
     def decorator(target_func):
         @wraps(target_func)
         def wrapper(*args, **kwargs):
             global _active_depth
+
+            # Skip if already tracing (nested call)
             if _active_depth > 0:
                 return target_func(*args, **kwargs)
 
             reset()
             configure(
-                show_line_events=show_lines,
-                show_locals_on_line=show_locals,
-                include_args=show_args,
+                show_lines=show_lines,
+                show_locals=show_locals,
+                show_args=show_args,
             )
 
             print(f"\n=== TraceFlow: {target_func.__name__} ===")
 
-            t0 = time.perf_counter()
+            start_time = time.perf_counter()
             _active_depth += 1
             start()
 
@@ -42,16 +55,14 @@ def trace(func=None, *, show_lines=False, show_locals=False, show_args=True):
                 stop()
                 _active_depth -= 1
 
-            t1 = time.perf_counter()
+            end_time = time.perf_counter()
+
+            # Summary
             print(f"result: {result}")
-            print(f"time: {t1 - t0:.6f}s")
+            print(f"time: {end_time - start_time:.6f}s")
             print("=== End TraceFlow ===\n")
 
             return result
 
         return wrapper
-
-    if func is None:
-        # Supports both @trace and @trace(...)
-        return decorator
-    return decorator(func)
+    return decorator if func is None else decorator(func)
