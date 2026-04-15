@@ -1,228 +1,177 @@
 # TraceFlow
 
-TraceFlow is a lightweight Python tracing tool that helps you understand code flow while functions run.
+TraceFlow is a lightweight Python tracing tool that helps you understand how your code runs.
 
-It can show:
-- which function is called
-- input argument values
-- return values
-- optional line-by-line execution
-- optional local state per line
-- exceptions
-- total execution time
+It shows:
 
-## What Is Included
+* Function calls
+* Input arguments
+* Return values
+* Optional line-by-line execution
+* Optional variable values (locals)
+* Exceptions
+* Execution time
 
-Project files:
+---
 
-```text
-TraceFlow/
-	main.py
-	traceflow/
-		api.py
-		tracer.py
-```
+## Demo
 
-### File Responsibilities
+![TraceFlow Demo](demo.gif)
 
-- `traceflow/api.py`:
-	- Public API for users.
-	- Provides `trace` decorator.
-	- Provides state-detail flags: `trace_state_start` and `trace_state_stop`.
-- `traceflow/tracer.py`:
-	- Core trace logic (`TraceEngine`).
-	- Handles call, line, return, and exception events.
-	- Formats output to keep it readable.
-- `main.py`:
-	- Example usage (backtracking combinations demo).
+---
 
-## Requirements
+## Installation
 
-- Python 3.8+
-- No external dependencies
+No installation needed.
+
+* Python 3.8+
+* No external dependencies
+
+Just clone or download the project.
+
+---
 
 ## Quick Start
 
-Run from project root:
-
-```bash
-python main.py
-```
-
-## Public API
-
-Import API:
-
 ```python
-from traceflow.api import trace, trace_state_start, trace_state_stop
+from traceflow.api import trace
+
+@trace
+def add(a, b):
+    return a + b
+
+add(2, 3)
 ```
 
-### 1. `trace`
+Output:
 
-Decorator to trace a function.
+```
+▶ add(a=2, b=3)
+◀ add() -> 5
+```
 
-Usage:
+---
+
+## Core Usage
+
+### Basic
 
 ```python
 @trace
-def fn(...):
-		...
+def func():
+    ...
 ```
 
-or with options:
+### With Options
 
 ```python
-@trace(show_lines=True, show_locals=True, show_args=True)
-def fn(...):
-		...
+@trace(show_lines=True, show_locals=True)
+def func():
+    ...
 ```
 
-Parameters:
+### Options
 
-- `show_lines` (default: `False`):
-	- `True` prints each executed line.
-- `show_locals` (default: `False`):
-	- `True` prints local variables on each line event.
-	- Works when line tracing is enabled.
-- `show_args` (default: `True`):
-	- `True` prints function arguments.
-- Backward-compatible aliases:
-	- `lines` maps to `show_lines`
-	- `locals_on_line` maps to `show_locals`
+| Option      | Default | Description                   |
+| ----------- | ------- | ----------------------------- |
+| show_lines  | False   | Show each executed line       |
+| show_locals | False   | Show variable values per line |
+| show_args   | True    | Show function arguments       |
 
-### 2. `trace_state_start(show_locals=True)`
+---
 
-Enables detailed line tracing in the current running trace session.
+## Focused Debugging
 
-Use this when you want extra detail only for one code block, usually around loops.
-
-### 3. `trace_state_stop()`
-
-Turns off detailed line tracing and goes back to compact output.
-
-## Recommended Usage Pattern
-
-Default mode should stay compact. Enable detail only around code you are debugging.
+TraceFlow lets you enable detailed tracing only where needed.
 
 ```python
 from traceflow.api import trace, trace_state_start, trace_state_stop
 
 @trace
 def process(items):
-		summary = []
+    result = []
 
-		trace_state_start(show_locals=True)
-		for item in items:
-				summary.append(item * 2)
-		trace_state_stop()
+    trace_state_start(show_locals=True)
+    for i in items:
+        result.append(i * 2)
+    trace_state_stop()
 
-		return summary
+    return result
 ```
 
-This gives clean function-level trace, plus deep detail only inside the loop block.
+---
 
 ## Output Format
 
-TraceFlow uses symbols to make output easy to scan:
-
-- `▶` function call
-- `◀` function return
-- `│ line N` line execution (when enabled)
-- `✖` exception event
-
-
-![alt text](1.png)
-![alt text](2.png)
-
-Wrapper summary:
-
-- `result: ...`
-- `time: ...`
+| Symbol   | Meaning         |
+| -------- | --------------- |
+| ▶        | Function call   |
+| ◀        | Function return |
+| │ line N | Line execution  |
+| ✖        | Exception       |
 
 Example:
 
-```text
-=== TraceFlow: add ===
-▶ add(a=2, b=3)
-◀ add() -> 5
-result: 5
-time: 0.000102s
-=== End TraceFlow ===
+```
+▶ factorial(n=3)
+  ▶ factorial(n=2)
+    ▶ factorial(n=1)
+    ◀ factorial() -> 1
+  ◀ factorial() -> 2
+◀ factorial() -> 6
 ```
 
-## Current Example in `main.py`
+---
 
-The demo generates all combinations of `[1, 2, 3]` using backtracking and shows:
+## Exception Example
 
-- recursive function tracing
-- loop-state tracing only inside selected block
-
-Expected combinations:
-
-```text
-[[], [1], [1, 2], [1, 2, 3], [1, 3], [2], [2, 3], [3]]
+```
+▶ risky()
+✖ risky() ! ZeroDivisionError: division by zero
+◀ risky() -> None
 ```
 
-## Internal Behavior Details
+---
 
-### Re-entrancy / Nested Calls
+## Project Structure
 
-- `trace` uses an internal depth counter.
-- Only the top-level traced call starts and stops `sys.settrace`.
-- Nested traced calls do not create duplicate top-level wrappers.
-
-### Frame Filtering
-
-Trace engine skips:
-
-- internal TraceFlow module frames
-- synthetic frames such as `<listcomp>`, `<dictcomp>`, and `<lambda>`
-
-This keeps output focused on user code.
-
-### Value Formatting
-
-To avoid noisy output:
-
-- large values are shortened
-- lists/dicts are truncated
-- objects are shown in compact readable form where possible
-
-## Troubleshooting
-
-### Output is too noisy
-
-Use default compact mode:
-
-```python
-@trace
+```
+TraceFlow/
+│
+├── main.py
+└── traceflow/
+    ├── api.py
+    └── tracer.py
 ```
 
-Enable detailed state only in a small block:
+---
 
-```python
-trace_state_start(show_locals=True)
-# debug target block
-trace_state_stop()
-```
+## How It Works
 
-### I only want line numbers, not full locals
+* Uses Python’s built-in sys.settrace
+* Tracks function calls, lines, returns, and exceptions
+* Formats output to stay readable
 
-```python
-trace_state_start(show_locals=False)
-```
+---
 
-### I do not want argument values
+## Smart Output
 
-```python
-@trace(show_args=False)
-```
+To keep logs clean:
 
-### Tracing does not start
+* Long strings are shortened
+* Large lists/dictionaries are truncated
+* Complex objects are simplified
 
-- Ensure function is decorated with `@trace`.
-- Ensure script is run from project root.
+---
+
+## Tips
+
+* Use default @trace for clean output
+* Enable detailed tracing only where needed
+* Avoid full line tracing everywhere
+
+---
 
 ## License
 
-MIT License. See `LICENSE`.
+MIT License
