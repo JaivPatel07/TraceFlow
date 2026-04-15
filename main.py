@@ -2,7 +2,7 @@
 TraceFlow demo using recursion and exception handling.
 """
 
-from traceflow.api import trace, trace_state_start, trace_state_stop
+from traceflow import trace, trace_state_start, trace_state_stop
 
 
 @trace(show_lines=True)
